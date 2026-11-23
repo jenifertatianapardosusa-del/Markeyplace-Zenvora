@@ -7,11 +7,23 @@ import { useFonts, Fredoka_700Bold } from '@expo-google-fonts/fredoka';
 // FUNCIONES DE CLACULO
 const formatoCOP = (n) => '$' + Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 
+// el stock total es la suma del stock de las variantes
+const stockTotal= (p) => p.variantes.reduce((suma, v) => suma + v.stock, 0);
+const precioDesde = (p) => Math.min(...p.variantes.map((v) => v.precio));
+const hayVariantes = (p) => p.variantes.length > 1;
+
+// Busca ell producto y la variante a partir de los id guardados en el carrito
+const buscarVariante = (productos, productoId, varianteId) => {
+  const p = productos.find((x) => x.id === productoId);
+  const v = p ? p.variantes.find((x) => x.id === varianteId) : null;
+  return {p, v};
+}
+
 // SUBOTAL, DESCUENTO, ENVIO Y TOTAL
 const calcularResumen = (carrito, productos, cuponActivo) => {
   const subtotal = carrito.reduce((acc, l) => {
-    const p = productos.find((x) => x.id === l.id);
-    return acc + (p ? p.precio * l.cantidad : 0);
+    const {v} = buscarVariante(productos, l.id, l.varianteId);  
+    return acc + (v ? v.precio * l.cantidad : 0);
   }, 0);
   const descuento = cuponActivo ? Math.round(subtotal * 0.1) : 0;
   const envio = subtotal === 0 ? 0 : subtotal >= 150000 ? 0 : 8000;
@@ -74,7 +86,7 @@ function Tarjeta({ p, esFav, onFav, onPress }) {
     <Pressable style={s.tarjeta} onPress={onPress}>
       <View style={s.recuadro}>
         <Foto p={p} style={s.fotoTarjeta} inicialesStyle={s.iniciales} />
-        {p.stock === 0 && <Text style={s.agotado}>AGOTADO</Text>}
+        {stockTotal(p) === 0 && <Text style={s.agotado}>AGOTADO</Text>}
         <Pressable style={s.corazon} onPress={onFav}>
           <Ionicons name={esFav ? 'heart' : 'heart-outline'} size={20} color={C.primario} />
         </Pressable>
@@ -82,8 +94,8 @@ function Tarjeta({ p, esFav, onFav, onPress }) {
       <View style={{ padding: 10 }}>
         <Text style={s.tarjetaNombre}>{p.nombre}</Text>
         <Text style={s.gris}>{p.categoria}</Text>
-        <Text style={s.gris}>{p.stock === 0 ? 'Agotado' : 'Disponible: ' + p.stock}</Text>
-        <Text style={s.precio}>{formatoCOP(p.precio)}</Text>
+        <Text style={s.gris}>{p.stock === 0 ? 'Agotado' : 'Disponible: ' + stockTotal(p)}</Text>
+        <Text style={s.precio}>{(hayVariantes(p) ? 'Desde ' : ' ') +formatoCOP(precioDesde(p))}</Text>
       </View>
     </Pressable>
   );
@@ -99,7 +111,7 @@ function Catalogo({ productos, favoritos, toggleFavorito, abrirDetalle, busqueda
       p.nombre.toLowerCase().includes(busqueda.trim().toLowerCase()) &&
       (categoria === 'Todas' || p.categoria === categoria)
   );
-  lista = [...lista].sort((a, b) => (orden === 'asc' ? a.precio - b.precio : b.precio - a.precio));
+  lista = [...lista].sort((a, b) => (orden === 'asc' ? precioDesde(a) - precioDesde(b) : precioDesde(b) - precioDesde(a)));
 
   return(
     <View style={{ flex: 1}}>
@@ -148,9 +160,15 @@ function Catalogo({ productos, favoritos, toggleFavorito, abrirDetalle, busqueda
 
 // DETALLE DEL PRODUCTO
 function Detalle({ producto, esFav, toggleFavorito, agregar, volver, valoraciones, valorar }) {
-  const agotado = producto.stock === 0;
+  // Si el producto tiene una sola variante, queda elegida automáticamente
+  const [varianteId, setVarianteId] = useState(hayVariantes(producto) ? null : producto.variantes[0].id);
+  const variante = producto.variantes.find((v) => v.id === varianteId) || null;
+  const agotado = stockTotal(producto) === 0;
+  const sinStockVariante = variante !== null && variante.stock === 0;
+  const bloqueado = agotado || sinStockVariante;
   const lista = valoraciones[producto.id] || [];
   const promedio = lista.length ? lista.reduce((a, b) => a + b, 0) / lista.length : 0;
+  const precioMostrado = variante ? variante.precio : precioDesde(producto);
 
   return (
     <View style={{ flex: 1 }}>
@@ -167,8 +185,9 @@ function Detalle({ producto, esFav, toggleFavorito, agregar, volver, valoracione
       <ScrollView contentContainerStyle={{ padding: 20 }}>
         <View style={s.etiqueta}><Text style={{ color: C.blanco }}>{producto.categoria}</Text></View>
         <Text style={s.tituloDetalle}>{producto.nombre}</Text>
+        <Text style={s.gris}>Marca: {producto.marca}</Text>
 
-        <View style={s.fila}>
+        <View style={[s.fila, { marginTop: 8 }]}>
           {[1, 2, 3, 4, 5].map((n) => (
             <Pressable key={n} onPress={() => valorar(producto.id, n)}>
               <Ionicons name={n <= Math.round(promedio) ? 'star' : 'star-outline'} size={24} color={C.primario} />
@@ -179,18 +198,39 @@ function Detalle({ producto, esFav, toggleFavorito, agregar, volver, valoracione
           </Text>
         </View>
 
+        {hayVariantes(producto) && (
+          <View style={{ marginTop: 14 }}>
+            <Text style={[s.gris, { marginBottom: 6 }]}>Elige una variante</Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+              {producto.variantes.map((v) => (
+                <Pressable
+                  key={v.id}
+                  onPress={() => setVarianteId(v.id)}
+                  style={[s.chip, { minHeight: 44, justifyContent: 'center', paddingHorizontal: 16 }, v.id === varianteId && s.chipOn, v.stock === 0 && { opacity: 0.5 }]}
+                >
+                  <Text style={[s.chipTxt, v.id === varianteId && { color: C.blanco }]}>{v.etiqueta}</Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+        )}
+
         <View style={[s.fila, { justifyContent: 'space-between', marginVertical: 14 }]}>
-          <Text style={s.precioGrande}>{formatoCOP(producto.precio)}</Text>
+          <Text style={s.precioGrande}>{(!variante && hayVariantes(producto) ? 'Desde ' : '') + formatoCOP(precioMostrado)}</Text>
           <View style={s.chip}>
-            <Text style={s.chipTxt}>{agotado ? 'Agotado' : 'Disponible - ' + producto.stock + ' unidades'}</Text>
+            <Text style={s.chipTxt}>
+              {variante
+                ? variante.stock === 0 ? 'Variante agotada' : 'Disponible - ' + variante.stock + ' unidades'
+                : agotado ? 'Agotado' : 'Total: ' + stockTotal(producto) + ' unidades'}
+            </Text>
           </View>
         </View>
         <Text style={s.gris}>{producto.descripcion}</Text>
       </ScrollView>
 
       <View style={{ padding: 20 }}>
-        <Pressable disabled={agotado} style={[s.boton, agotado && { backgroundColor: '#BBBBBB' }]} onPress={() => agregar(producto.id)}>
-          <Text style={s.botonTxt}>{agotado ? 'Agotado' : 'Agregar al carrito'}</Text>
+        <Pressable disabled={bloqueado} style={[s.boton, bloqueado && { backgroundColor: '#BBBBBB' }]} onPress={() => agregar(producto.id, varianteId)}>
+          <Text style={s.botonTxt}>{agotado ? 'Agotado' : sinStockVariante ? 'Variante agotada' : 'Agregar al carrito'}</Text>
         </Pressable>
       </View>
     </View>
@@ -261,24 +301,25 @@ function Carrito({ carrito, productos, resumen, agregar, disminuir, eliminar, cu
         <>
           <ScrollView contentContainerStyle={{ padding: 20 }}>
             {carrito.map((l) => {
-              const p = productos.find((x) => x.id === l.id);
+              const {p, v} = buscarVariante(productos, l.id, l.variante);
               return (
-                <View key={l.id} style={s.lineaCarrito}>
+                <View key={l.id + '|' + l.varianteId} style={s.lineaCarrito}>
                   <View style={s.miniRecuadro}><Foto p={p} style={s.fotoMini} inicialesStyle={s.miniIniciales} /></View>
                   <View style={{ flex: 1, marginLeft: 12 }}>
                     <Text style={s.tarjetaNombre}>{p.nombre}</Text>
-                    <Text style={s.precio}>{formatoCOP(p.precio)}</Text>
+                    {hayVariantes(p) && <Text style={s.gris}>{v.etiqueta}</Text>} 
+                    <Text style={s.precio}>{formatoCOP(v.precio)}</Text>
                     <View style={s.fila}>
-                      <Pressable style={[s.btnCant, { backgroundColor: C.suave }]} onPress={() => disminuir(l.id)}>
+                      <Pressable style={[s.btnCant, { backgroundColor: C.suave }]} onPress={() => disminuir(l.id, l.varianteId)}>
                         <Text style={[s.btnCantTxt, { color: C.primario }]}>-</Text>
                       </Pressable>
                       <Text style={s.cantidad}>{l.cantidad}</Text>
-                      <Pressable style={[s.btnCant, { backgroundColor: C.primario }]} onPress={() => agregar(l.id)}>
+                      <Pressable style={[s.btnCant, { backgroundColor: C.primario }]} onPress={() => agregar(l.id, l.varianteId)}>
                         <Text style={[s.btnCantTxt, { color: C.blanco }]}>+</Text>
                       </Pressable>
                     </View>
                   </View>
-                  <Pressable style={s.btnRedondo} onPress={() => eliminar(l.id)}>
+                  <Pressable style={s.btnRedondo} onPress={() => eliminar(l.id, l.varianteId)}>
                     <Ionicons name="trash-outline" size={22} color={C.primario} />
                   </Pressable>
                 </View>
@@ -605,27 +646,32 @@ export default function App() {
   const toggleFavorito = (id) =>
     setFavoritos((f) => (f.includes(id) ? f.filter((x) => x !== id) : [...f, id]));
 
-  // AGREGAR: aumentar validando stock
-  const agregar = (id) => {
-    const p = productos.find((x) => x.id === id);
-    const linea = carrito.find((l) => l.id === id);
+  // AGREGAR: aumentar validando stock y tambien recibe la variante
+  const agregar = (id, varianteId) => {
+    if (!varianteId) return avisar('Elige una variante antes de agregar al carrito');
+    const { v } = buscarVariante(productos, id, varianteId);
+    const linea = carrito.find((l) => l.id === id && l.varianteId === varianteId);
     const enCarrito = linea ? linea.cantidad : 0;
-    if (p.stock === 0) return avisar('Producto agotado');
-    if (enCarrito >= p.stock) return avisar('No hay más unidades disponibles');
+    if (v.stock === 0) return avisar('Esta variante está agotada');
+    if (enCarrito >= v.stock) return avisar('Máximo permitido: ' + v.stock + ' unidades de esta variante');
     setCarrito(
       linea
-        ? carrito.map((l) => (l.id === id ? { ...l, cantidad: l.cantidad + 1 } : l))
-        : [...carrito, { id, cantidad: 1 }]
+        ? carrito.map((l) => (l.id === id && l.varianteId === varianteId ? { ...l, cantidad: l.cantidad + 1 } : l))
+        : [...carrito, { id, varianteId, cantidad: 1 }]
     );
     avisar('Producto agregado al carrito');
   };
 
   // Al llegar a 0 la línea se elimina (nunca hay cantidades negativas)
-  const disminuir = (id) =>
-    setCarrito(carrito.map((l) => (l.id === id ? { ...l, cantidad: l.cantidad - 1 } : l)).filter((l) => l.cantidad > 0));
+   const disminuir = (id, varianteId) =>
+    setCarrito(
+      carrito
+        .map((l) => (l.id === id && l.varianteId === varianteId ? { ...l, cantidad: l.cantidad - 1 } : l))
+        .filter((l) => l.cantidad > 0)
+    );
 
-  const eliminar = (id) => {
-    setCarrito(carrito.filter((l) => l.id !== id));
+  const eliminar = (id, varianteId) => {
+    setCarrito(carrito.filter((l) => !(l.id === id && l.varianteId === varianteId)));
     avisar('Producto eliminado');
   };
 
@@ -647,47 +693,31 @@ export default function App() {
   };
 
   // crear o editar un roducto
-  const guardarProducto = (datos, idEditar) => {
-    if (idEditar) {
-      // se modifica el mismo producto siin duplicarlo
-      setProductos(productos.map((p) => (p.id === idEditar ? { ...p, ...datos} : p)));
-      avisar('Producto actualizado');
-    } else {
-      const mayor = productos.reduce((m, p) => Math.max(m, parseInt(p.id.split('-')[1], 10) || 0), 0);
-      const id = 'PROD-' + String(mayor + 1).padStart(3, '0');
-      const ini = datos.nombre.slice(0, 2).toUpperCase();
-      setProductos([...productos, { id, ini, ...datos }]);
-      avisar('Producto creado: ' + id);
-    }
-  };
-
-  const resumen = calcularResumen(carrito, productos, cuponActivo);
-
-  // confirmar compra
   const confirmarCompra = (datos) => {
     if (carrito.length === 0) return avisar('Tu carrito está vacío');
-    // Revisar TODO el stock antes de tocar nada
     for (const l of carrito) {
-      const p = productos.find((x) => x.id === l.id);
-      if (l.cantidad > p.stock) return avisar('Sin stock suficiente de ' + p.nombre);
+      const { p, v } = buscarVariante(productos, l.id, l.varianteId);
+      if (l.cantidad > v.stock) return avisar('Sin stock suficiente de ' + p.nombre + ' (' + v.etiqueta + ')');
     }
-    // Guardar una COPIA del pedido (no depende del carrito después)
     const pedido = {
       codigo: 'ZV-' + Date.now(),
       fecha: new Date().toLocaleString('es-CO'),
       comprador: datos,
       items: carrito.map((l) => {
-        const p = productos.find((x) => x.id === l.id);
-        return { nombre: p.nombre, cantidad: l.cantidad, precioUnit: p.precio };
+        const { p, v } = buscarVariante(productos, l.id, l.varianteId);
+        return { id: p.id, varianteId: v.id, nombre: p.nombre, etiqueta: v.etiqueta, cantidad: l.cantidad, precioUnit: v.precio };
       }),
       ...resumen,
     };
-    // Descontar stock, guardar pedido y vaciar carrito
+    //guardar pedido y vaciar carrito
     setProductos(
-      productos.map((p) => {
-        const l = carrito.find((x) => x.id === p.id);
-        return l ? { ...p, stock: p.stock - l.cantidad } : p;
-      })
+      productos.map((p) => ({
+        ...p,
+        variantes: p.variantes.map((v) => {
+          const l = carrito.find((x) => x.id === p.id && x.varianteId === v.id);
+          return l ? { ...v, stock: v.stock - l.cantidad } : v;
+        }),
+      }))
     );
     setPedidos([pedido, ...pedidos]);
     setUltimoPedido(pedido);
