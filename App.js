@@ -538,7 +538,7 @@ function Vendedor({ productos, guardar }) {
 
   const editar = (p) => {
     setEditId(p.id);
-    setForm({ nombre: p.nombre, categoria: p.categoria, precio: String(p.precio), stock: String(p.stock), descripcion: p.descripcion });
+    setForm({ nombre: p.nombre, categoria: p.categoria, precio: String(p.variante[0].precio), stock: String(stockTotal(p)), descripcion: p.descripcion });
     setError(sinError);
   };
 
@@ -726,6 +726,25 @@ export default function App() {
     setPantalla('confirmacion');
   };
 
+    const guardarProducto = (datos, idEditar) => {
+    const { precio, stock, ...resto } = datos;
+    if (idEditar) {
+      setProductos(productos.map((p) => {
+        if (p.id !== idEditar) return p;
+        // Solo los productos con una variante permiten editar precio y stock desde el panel
+        const variantes = p.variantes.length === 1 ? [{ ...p.variantes[0], precio, stock }] : p.variantes;
+        return { ...p, ...resto, precio, variantes };
+      }));
+      avisar('Producto actualizado');
+    } else {
+      const mayor = productos.reduce((m, p) => Math.max(m, parseInt(p.id.split('-')[1], 10) || 0), 0);
+      const id = 'PROD-' + String(mayor + 1).padStart(3, '0');
+      const ini = resto.nombre.slice(0, 2).toUpperCase();
+      setProductos([...productos, { id, ini, marca: 'Zenvora', ...resto, precio, variantes: [{ id: id + '-U', etiqueta: 'Única', precio, stock }] }]);
+      avisar('Producto creado: ' + id);
+    }
+  };
+
   const irCatalogo = () => setPantalla('catalogo');
 
   if (!fuentesListas) return null;
@@ -742,6 +761,7 @@ export default function App() {
       )}
       {pantalla === 'detalle' && productoSel && (
         <Detalle
+          key={productoSel.id}
           producto={productos.find((p) => p.id === productoSel.id)}
           esFav={favoritos.includes(productoSel.id)} toggleFavorito={toggleFavorito} agregar={agregar}
           volver={() => setPantalla(anterior)} valoraciones={valoraciones} valorar={valorar}
