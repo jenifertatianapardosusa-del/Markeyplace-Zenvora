@@ -104,3 +104,55 @@ export const CONSULTAS_INICIALES = [
   {id: 'Q-1', productoId: 'PROD-001', pregunta: '¿La luz se puede regular?', estado: 'Respondida', fecha: '05/11/2026',
     respuesta: 'Respuesta automatica de demostracion',}
 ];
+
+// PEDIDOS DE PRUEBA
+export const PEDIDOS_INICIALES = [
+    { codigo: 'ZV-1001', fecha: '10/11/2026, 9:15 a. m.', comprador: { nombre: 'Ana Prueba', telefono: '3001234567' },
+        direccion: { alias: 'Casa', municipio: 'Mosquera', referencia: 'Conjunto Los Pinos, torre 2, apto 301' },
+        modalidad: 'estandar', plazo: '1 a 2 días',
+        items: [{ id: 'PROD-006', varianteId: 'PROD-006-U', nombre: 'Cuerda para saltar', etiqueta: 'Única', cantidad: 2, precioUnit: 18000 }],
+        subtotal: 36000, descuento: 0, envio: 6000, total: 42000,
+        estado: 'Confirmado', stockRestituido: false,
+        historialEstados: [{ estado: 'Confirmado', fecha: '10/11/2026, 9:15 a. m.' }] },
+    { codigo: 'ZV-1002', fecha: '11/11/2026, 2:40 p. m.', comprador: { nombre: 'Ana Prueba', telefono: '3001234567' },
+        direccion: { alias: 'Oficina', municipio: 'Funza', referencia: 'Edificio Central, oficina 502' },
+        modalidad: 'estandar', plazo: '2 a 3 días',
+        items: [
+            { id: 'PROD-001', varianteId: 'PROD-001-BL', nombre: 'Lámpara de escritorio', etiqueta: 'Blanca', cantidad: 1, precioUnit: 89000 },
+            { id: 'PROD-007', varianteId: 'PROD-007-U', nombre: 'Agenda 2027', etiqueta: 'Única', cantidad: 1, precioUnit: 28000 },
+        ],
+        subtotal: 117000, descuento: 0, envio: 8000, total: 125000,
+        estado: 'Preparando', stockRestituido: false,
+        historialEstados: [
+            { estado: 'Confirmado', fecha: '11/11/2026, 2:40 p. m.' },
+            { estado: 'Preparando', fecha: '11/11/2026, 4:05 p. m.' },
+        ] },
+    { codigo: 'ZV-1003', fecha: '12/11/2026, 10:00 a. m.', comprador: { nombre: 'Luis Ejemplo', telefono: '3109876543' },
+        direccion: { alias: 'Apartamento', municipio: 'Madrid', referencia: 'Calle ficticia 12, casa 4' },
+        modalidad: 'expres', plazo: '2 a 3 días',
+        items: [{ id: 'PROD-004', varianteId: 'PROD-004-500', nombre: 'Botella deportiva', etiqueta: '500 ml', cantidad: 2, precioUnit: 38000 }],
+        subtotal: 76000, descuento: 0, envio: 14000, total: 90000,
+        estado: 'En camino', stockRestituido: false,
+        historialEstados: [
+            { estado: 'Confirmado', fecha: '12/11/2026, 10:00 a. m.' },
+            { estado: 'Preparando', fecha: '12/11/2026, 11:30 a. m.' },
+            { estado: 'En camino', fecha: '12/11/2026, 3:15 p. m.' },
+        ] },
+        {codigo: 'ZV-1004', fecha: '08/11/2026, 8:20 a.m', comprador: {nombre: 'Ana Perez', telefono: '3001234567'},
+        direccion: {alias:'Casa', municipio: 'Mosquera', referencia: 'Conjunto Los Pinos, torre 2, apto 301'},
+        modalidad: 'expres', plazo: '1 día',
+        items: [
+          {id:'PROD-011', varianteId: 'PROD-011-NE', nombre: 'Gorra clasica', etiqueta: 'Negra', cantidad: 1,
+            precioUnit: 32000},
+          {id: 'PROD-008', varianteId: 'PROD-008-U', nombre: 'Set de marcadores', etiqueta: 'Única', cantidad: 1,
+            precioUnit: 22000},
+        ],
+        subtotal: 54000, descuento: 0, envio: 10000, total: 64000,
+        estado: 'Entregado',  stockRestituido: false,
+        historialEstados: [
+          {estado: 'Confirmado', fecha: '08/11/2026, 8:20 a.m'},
+          {estado: 'Preparando', fecha: '08/11/2026, 9:00 a.m'},
+          {estado: 'En camino', fecha: '08/11/2026, 12:00 m'},
+          {estado: 'Entregado', fecha: '08/11/2026, 5:30 p.m'},
+        ]},
+];
