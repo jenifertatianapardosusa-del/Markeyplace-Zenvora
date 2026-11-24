@@ -8,13 +8,13 @@ import {
 } from './productos';
 import { useFonts, Fredoka_700Bold } from '@expo-google-fonts/fredoka';
 
-// ====================== CONSTANTES ======================
+// CONSTANTES 
 const ORDEN_ESTADOS = ['Confirmado', 'Preparando', 'En camino', 'Entregado'];
 const RESPUESTA_DEMO = 'Respuesta automática de demostración: no fue escrita por una persona.';
 const FILTROS_VACIOS = { marca: 'Todas', min: '', max: '', soloDisp: false };
 const MOTIVOS = ['Entrega', 'Producto', 'Otro'];
 
-// ====================== FUNCIONES DE CÁLCULO ======================
+// FUNCIONES DE CÁLCULO
 const formatoCOP = (n) => '$' + Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 const ahora = () => new Date().toLocaleString('es-CO');
 
@@ -39,7 +39,7 @@ const buscarVariante = (productos, productoId, varianteId) => {
   return { p, v };
 };
 
-// SUBTOTAL, DESCUENTO, ENVÍO Y TOTAL (envio = null mientras no haya dirección y modalidad)
+// SUBTOTAL, DESCUENTO, ENVÍO Y TOTAL
 const calcularResumen = (carrito, productos, cuponActivo, envio) => {
   const subtotal = carrito.reduce((acc, l) => {
     const { v } = buscarVariante(productos, l.id, l.varianteId);
@@ -51,7 +51,7 @@ const calcularResumen = (carrito, productos, cuponActivo, envio) => {
   return { subtotal, descuento, envio: envioFinal, envioPendiente: subtotal > 0 && envio === null, total };
 };
 
-// ====================== COMPONENTES REUTILIZABLES ======================
+// COMPONENTES REUTILIZABLES 
 function Encabezado({ titulo, eslogan, icono, onVolver, children }) {
   return (
     <View style={s.encabezado}>
@@ -131,9 +131,9 @@ function Tarjeta({ p, esFav, onFav, enComparacion, onComparar, onPress }) {
   );
 }
 
-// ====================== PANTALLAS ======================
+//PANTALLAS 
 
-// ---------- CATÁLOGO (búsqueda + categoría + filtros combinados) ----------
+//CATÁLOGO
 function Catalogo({
   productos, favoritos, toggleFavorito, abrirDetalle, busqueda, setBusqueda, categoria, setCategoria,
   orden, setOrden, filtros, setFiltros, comparacion, toggleComparar, irComparador,
@@ -254,7 +254,7 @@ function Catalogo({
   );
 }
 
-// ---------- DETALLE (variantes, reposición, preguntas, relacionados) ----------
+//DETALLE 
 function Detalle({
   producto, productos, esFav, toggleFavorito, agregar, volver, valoraciones, valorar,
   consultas, preguntar, simularRespuesta, suscripciones, suscribir, cancelarSuscripcion, simularReposicion, abrirDetalle,
@@ -358,8 +358,6 @@ function Detalle({
             </Pressable>
           </View>
         )}
-
-        {/* HU24: preguntas */}
         <Text style={[s.subtitulo, { marginTop: 22 }]}>Preguntas</Text>
         {preguntas.length === 0 && <Text style={s.gris}>Aún no hay preguntas para este producto.</Text>}
         {preguntas.map((c) => (
@@ -416,7 +414,7 @@ function Detalle({
   );
 }
 
-// ---------- FAVORITOS ----------
+// FAVORITOS
 function Favoritos({ productos, favoritos, toggleFavorito, comparacion, toggleComparar, abrirDetalle, irCatalogo }) {
   const lista = productos.filter((p) => favoritos.includes(p.id));
   return (
@@ -444,7 +442,7 @@ function Favoritos({ productos, favoritos, toggleFavorito, comparacion, toggleCo
   );
 }
 
-// ---------- FILAS DEL RESUMEN ----------
+// FILAS DEL RESUMEN 
 function Resumen({ resumen, hayProductos }) {
   const Fila = ({ a, b, fuerte }) => (
     <View style={[s.fila, { justifyContent: 'space-between', marginVertical: 3 }]}>
@@ -463,7 +461,7 @@ function Resumen({ resumen, hayProductos }) {
   );
 }
 
-// ---------- CARRITO ----------
+// CARRITO 
 function Carrito({ carrito, productos, resumen, agregar, disminuir, eliminar, cuponActivo, aplicarCupon, irCheckout, irCatalogo }) {
   const [codigo, setCodigo] = useState('');
   return (
@@ -530,12 +528,12 @@ function Carrito({ carrito, productos, resumen, agregar, disminuir, eliminar, cu
   );
 }
 
-// ---------- CHECKOUT: datos, dirección, modalidad y revisión ----------
+// CHECKOUT: datos, dirección, modalidad y revisión 
 function Checkout({
   carrito, productos, resumen, confirmar, volver, direcciones, direccionSel, setDireccionSel,
   modalidad, setModalidad, comprador, setComprador, irDirecciones,
 }) {
-  const [paso, setPaso] = useState('datos'); // 'datos' -> 'revision'
+  const [paso, setPaso] = useState('datos'); 
   const [error, setError] = useState('');
   const dir = direcciones.find((d) => d.id === direccionSel) || null;
   const envio = dir ? infoEnvio(dir.municipio, modalidad) : null;
@@ -620,7 +618,7 @@ function Checkout({
   );
 }
 
-// ---------- CONFIRMACIÓN ----------
+// CONFIRMACIÓN
 function Confirmacion({ pedido, irCatalogo, irPedidos }) {
   return (
     <View style={{ flex: 1 }}>
@@ -637,7 +635,7 @@ function Confirmacion({ pedido, irCatalogo, irPedidos }) {
   );
 }
 
-// ---------- MIS PEDIDOS: historial, seguimiento y cancelación ----------
+//MIS PEDIDOS
 function Pedidos({ pedidos, irCatalogo, avanzar, cancelar }) {
   const [selCodigo, setSelCodigo] = useState(null);
   const [confirmando, setConfirmando] = useState(false);
@@ -730,7 +728,7 @@ function Pedidos({ pedidos, irCatalogo, avanzar, cancelar }) {
   );
 }
 
-// ---------- MÁS (menú) ----------
+//MÁS
 function Mas({ irA, noLeidas, nComparacion }) {
   const filas = [
     { id: 'notificaciones', icono: 'notifications-outline', texto: 'Notificaciones', extra: noLeidas > 0 ? noLeidas + ' sin leer' : '' },
@@ -756,7 +754,7 @@ function Mas({ irA, noLeidas, nComparacion }) {
   );
 }
 
-// ---------- NOTIFICACIONES ----------
+//NOTIFICACIONES
 function Notificaciones({ notificaciones, abrir, volver }) {
   return (
     <View style={{ flex: 1 }}>
@@ -785,7 +783,7 @@ function Notificaciones({ notificaciones, abrir, volver }) {
   );
 }
 
-// ---------- DIRECCIONES ----------
+//DIRECCIONES
 function Direcciones({ direcciones, guardar, hacerPrincipal, volver }) {
   const vacio = { alias: '', municipio: '', referencia: '' };
   const [form, setForm] = useState(vacio);
@@ -856,7 +854,7 @@ function Direcciones({ direcciones, guardar, hacerPrincipal, volver }) {
   );
 }
 
-// ---------- COMPARADOR ----------
+//COMPARADOR
 function Comparador({ productos, comparacion, quitar, volver, irCatalogo }) {
   const lista = comparacion.map((id) => productos.find((p) => p.id === id)).filter(Boolean);
   return (
@@ -892,7 +890,7 @@ function Comparador({ productos, comparacion, quitar, volver, irCatalogo }) {
   );
 }
 
-// ---------- AYUDA ----------
+//AYUDA
 function Ayuda({ pedidos, tickets, crear, simularRespuesta, volver }) {
   const [pedidoSel, setPedidoSel] = useState(null);
   const [motivo, setMotivo] = useState(null);
@@ -961,7 +959,7 @@ function Ayuda({ pedidos, tickets, crear, simularRespuesta, volver }) {
   );
 }
 
-// ---------- PANEL DE VENDEDOR ----------
+//PANEL DE VENDEDOR
 function Vendedor({ productos, guardar }) {
   const formVacio = { nombre: '', categoria: 'Hogar', precio: '', stock: '', descripcion: '' };
   const sinError = { campo: '', motivo: '' };
@@ -1077,7 +1075,7 @@ function Vendedor({ productos, guardar }) {
   );
 }
 
-// ====================== APP PRINCIPAL ======================
+// APP PRINCIPAL
 const TABS = [
   { id: 'catalogo', nombre: 'Catálogo', icono: 'home-outline' },
   { id: 'favoritos', nombre: 'Favoritos', icono: 'heart-outline' },
@@ -1104,7 +1102,6 @@ export default function App() {
   const [busqueda, setBusqueda] = useState('');
   const [categoria, setCategoria] = useState('Todas');
   const [orden, setOrden] = useState('asc');
-  // Taller 5
   const [filtros, setFiltros] = useState(FILTROS_VACIOS);
   const [comparacion, setComparacion] = useState([]);
   const [consultas, setConsultas] = useState(CONSULTAS_INICIALES);
@@ -1116,7 +1113,6 @@ export default function App() {
   const [notificaciones, setNotificaciones] = useState([]);
   const [suscripciones, setSuscripciones] = useState([]);
   const [tickets, setTickets] = useState([]);
-
   const dirSel = direcciones.find((d) => d.id === direccionSel) || null;
   const infoEnv = dirSel && modalidad ? infoEnvio(dirSel.municipio, modalidad) : null;
   const resumen = calcularResumen(carrito, productos, cuponActivo, infoEnv ? infoEnv.costo : null);
@@ -1130,7 +1126,7 @@ export default function App() {
   };
 
   const abrirDetalle = (p) => {
-    if (pantalla !== 'detalle') setAnterior(pantalla); // así "volver" siempre regresa a la lista de origen
+    if (pantalla !== 'detalle') setAnterior(pantalla);
     setProductoSel(p);
     setPantalla('detalle');
   };
@@ -1138,7 +1134,7 @@ export default function App() {
   const toggleFavorito = (id) =>
     setFavoritos((f) => (f.includes(id) ? f.filter((x) => x !== id) : [...f, id]));
 
-  // ---------- COMPARADOR (no toca carrito, favoritos ni inventario) ----------
+  //COMPARADOR
   const toggleComparar = (id) => {
     if (comparacion.includes(id)) return setComparacion(comparacion.filter((x) => x !== id));
     if (comparacion.length >= 3) return avisar('Máximo 3 productos para comparar');
@@ -1146,8 +1142,8 @@ export default function App() {
     avisar('Producto agregado al comparador');
   };
 
-  // ---------- CARRITO ----------
-  // AGREGAR: aumentar validando stock; recibe la variante
+  // CARRITO
+  // AGREGAR
   const agregar = (id, varianteId) => {
     if (!varianteId) return avisar('Elige una variante antes de agregar al carrito');
     const { v } = buscarVariante(productos, id, varianteId);
@@ -1193,7 +1189,7 @@ export default function App() {
     avisar('¡Gracias por tu valoración!');
   };
 
-  // ---------- NOTIFICACIONES (la clave evita duplicados del mismo evento) ----------
+  //NOTIFICACIONES 
   const notificar = (tipo, mensaje, referencia, clave) =>
     setNotificaciones((prev) =>
       prev.some((n) => n.id === clave) ? prev : [{ id: clave, tipo, mensaje, fecha: ahora(), leida: false, referencia }, ...prev]
@@ -1202,7 +1198,7 @@ export default function App() {
   const abrirNotificacion = (id) =>
     setNotificaciones((prev) => prev.map((n) => (n.id === id ? { ...n, leida: true } : n)));
 
-  // ---------- COMPRA ----------
+  //COMPRA
   const confirmarCompra = () => {
     if (carrito.length === 0) return avisar('Tu carrito está vacío');
     if (!dirSel || !infoEnv) return avisar('Elige una dirección y una modalidad de envío');
@@ -1251,7 +1247,7 @@ export default function App() {
     setPantalla('confirmacion');
   };
 
-  // ---------- SEGUIMIENTO Y CANCELACIÓN ----------
+  // SEGUIMIENTO Y CANCELACIÓN 
   const avanzarPedido = (codigo) => {
     const ped = pedidos.find((p) => p.codigo === codigo);
     if (!ped) return;
@@ -1270,7 +1266,7 @@ export default function App() {
     if (ped.estado !== 'Confirmado' && ped.estado !== 'Preparando')
       return avisar('No se puede cancelar: el pedido está "' + ped.estado + '" y ya salió del despacho');
     if (ped.stockRestituido) return avisar('Las unidades de este pedido ya fueron restituidas');
-    // restituir exactamente las unidades originales de cada variante (una sola vez)
+
     setProductos(
       productos.map((p) => ({
         ...p,
@@ -1285,7 +1281,7 @@ export default function App() {
     avisar('Pedido cancelado y stock restituido');
   };
 
-  // ---------- DIRECCIONES ----------
+  //DIRECCIONES
   const guardarDireccion = (datos, idEditar) => {
     if (idEditar) {
       setDirecciones(direcciones.map((d) => (d.id === idEditar ? { ...d, ...datos } : d)));
@@ -1306,7 +1302,7 @@ export default function App() {
     setPantalla('direcciones');
   };
 
-  // ---------- PREGUNTAS ----------
+  //PREGUNTAS
   const preguntar = (productoId, texto) => {
     setConsultas([...consultas, { id: 'Q-' + Date.now(), productoId, pregunta: texto, respuesta: null, fecha: ahora(), estado: 'Pendiente' }]);
     avisar('Pregunta enviada: estado Pendiente');
@@ -1317,7 +1313,7 @@ export default function App() {
     avisar('Respuesta simulada');
   };
 
-  // ---------- REPOSICIÓN ----------
+  //REPOSICIÓN 
   const suscribir = (productoId, varianteId) => {
     if (suscripciones.some((x) => x.varianteId === varianteId)) return avisar('Ya tienes un aviso activo para este artículo');
     setSuscripciones([...suscripciones, { productoId, varianteId }]);
@@ -1336,7 +1332,7 @@ export default function App() {
     setProductos(
       productos.map((x) => (x.id !== productoId ? x : { ...x, variantes: x.variantes.map((y) => (y.id === varianteId ? { ...y, stock: y.stock + UNIDADES } : y)) }))
     );
-    // solo se avisa si la suscripción sigue activa (si se canceló, no hay aviso)
+  
     if (suscripciones.some((x) => x.varianteId === varianteId)) {
       const nombre = p.nombre + (hayVariantes(p) ? ' (' + v.etiqueta + ')' : '');
       notificar('Reposición', nombre + ' ya tiene unidades disponibles', { tipo: 'producto', id: productoId }, 'repo-' + varianteId + '-' + Date.now());
@@ -1345,7 +1341,7 @@ export default function App() {
     avisar('Reposición simulada: +' + UNIDADES + ' unidades');
   };
 
-  // ---------- AYUDA ----------
+  // AYUDA 
   const crearTicket = (pedidoCodigo, motivo, descripcion) => {
     const id = 'CASO-' + String(tickets.length + 1).padStart(4, '0');
     setTickets([{ id, pedidoCodigo, motivo, descripcion, estado: 'Abierto', respuesta: null, fecha: ahora() }, ...tickets]);
@@ -1357,7 +1353,7 @@ export default function App() {
     avisar('Respuesta simulada');
   };
 
-  // ---------- VENDEDOR ----------
+  // VENDEDOR 
   const guardarProducto = (datos, idEditar) => {
     const { precio, stock, ...resto } = datos;
     if (idEditar) {
@@ -1465,7 +1461,7 @@ export default function App() {
   );
 }
 
-// ====================== ESTILOS ======================
+// ESTILOS
 const s = StyleSheet.create({
   fila: { 
     flexDirection: 'row', 
